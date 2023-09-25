@@ -13,6 +13,7 @@ We aim to allow users to look at different investment companies, projects, and e
 - Micah Elias
 - Neville Yangsi
 - Kedar Nagaraj
+- Neal Malani
 
 ## ER Diagram
 
