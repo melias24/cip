@@ -11,6 +11,7 @@ We aim to allow users to look at different investment companies, projects, and e
 ## Participants
 
 - Micah Elias
+- Neville Yangsi
 
 ## ER Diagram
 
