@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import {
-  fetchCompanyDetails,
+  fetchCompanyData,
   fetchFlexibleProjects,
+  fetchInvestsInByProjectId,
   fetchListOfCountries,
   fetchListOfProjects,
   fetchListOfSectors,
@@ -92,7 +93,17 @@ export async function HandleFlexibleProjects(req: Request, res: Response) {
 
   try {
     const projects = await fetchFlexibleProjects(options);
-    return res.json(projects);
+    let results = [];
+    for (let i = 0; i < projects.length; i++) {
+      let invests = await fetchInvestsInByProjectId(projects[i].Project_id);
+      if (invests.length > 0) {
+        let project = projects[i] as any;
+        project.Investor = invests[0].Investor;
+        project.Amount = invests[0].Amount;
+        results.push(project);
+      }
+    }
+    return res.json(results);
   } catch (err: any) {
     return res.status(500).send(err.message);
   }
@@ -135,18 +146,20 @@ export async function HandleSectorList(req: Request, res: Response) {
 //   }
 // }
 
-export async function HandleCompanyDetails(req: Request, res: Response) {
-  const queryParams = req.query;
-  const companyName = queryParams.name as string;
-  if (!companyName) {
-    return res.status(400).send("Company name parameter is required");
+export async function HandleCompanyData(req: Request, res: Response) {
+  const investor = req.query.name as string;
+  if (!investor) {
+    return res.status(400).send("Investor parameter is required");
   }
+
   try {
-    const companyDetails = await fetchCompanyDetails(companyName);
-    if (companyDetails) {
-      return res.json(companyDetails);
+    const companyData = await fetchCompanyData(investor);
+    if (companyData) {
+      return res.json(companyData);
     } else {
-      return res.status(404).send("Company not found");
+      return res
+        .status(404)
+        .send("Company data not found for the provided investor");
     }
   } catch (err: any) {
     console.log(err);

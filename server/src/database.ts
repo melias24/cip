@@ -1,12 +1,14 @@
 import sqlite3, { Database } from "sqlite3";
 
 export class DatabaseService {
-  private static instance: Database | null = null;
+  private static projectDB: Database | null = null;
+  private static companyDB: Database | null = null;
+  private static investsDB: Database | null = null;
 
-  public static getDbConnection(): Database | null {
-    if (!DatabaseService.instance) {
-      DatabaseService.instance = new sqlite3.Database(
-        "ChineseInvestment.db",
+  public static getProjectConnection(): Database | null {
+    if (!DatabaseService.projectDB) {
+      DatabaseService.projectDB = new sqlite3.Database(
+        "Project_Table.db",
         (err) => {
           if (err) {
             console.error("Error opening database", err);
@@ -16,17 +18,64 @@ export class DatabaseService {
         },
       );
     }
-    return DatabaseService.instance;
+    return DatabaseService.projectDB;
+  }
+
+  public static getCompanyConnection(): Database | null {
+    if (!DatabaseService.companyDB) {
+      DatabaseService.companyDB = new sqlite3.Database(
+        "Investment_Company.db",
+        (err) => {
+          if (err) {
+            console.error("Error opening database", err);
+          } else {
+            console.log("Database connection established");
+
+            // Attach other databases
+            if (!DatabaseService.companyDB) {
+              return;
+            }
+            DatabaseService.companyDB.exec(
+              `
+            ATTACH DATABASE 'Project_Table.db' AS ProjectDB;
+            ATTACH DATABASE 'Invests_in.db' AS InvestsDB;
+          `,
+              (attachErr) => {
+                if (attachErr)
+                  console.error("Error attaching databases", attachErr);
+              },
+            );
+          }
+        },
+      );
+    }
+    return DatabaseService.companyDB;
+  }
+
+  public static getInvestsInConnection(): Database | null {
+    if (!DatabaseService.investsDB) {
+      DatabaseService.investsDB = new sqlite3.Database(
+        "Invests_in.db",
+        (err) => {
+          if (err) {
+            console.error("Error opening database", err);
+          } else {
+            console.log("Database connection established");
+          }
+        },
+      );
+    }
+    return DatabaseService.investsDB;
   }
 
   public static closeDbConnection(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (DatabaseService.instance) {
-        DatabaseService.instance.close((err) => {
+      if (DatabaseService.projectDB) {
+        DatabaseService.projectDB.close((err) => {
           if (err) {
             reject(err);
           } else {
-            DatabaseService.instance = null;
+            DatabaseService.projectDB = null;
             resolve();
           }
         });
@@ -39,7 +88,7 @@ export class DatabaseService {
 
 export interface Project {
   Month: string;
-  Year: Date;
+  Year: string;
   Sector: string;
   Country: string;
   Region: string;
@@ -56,6 +105,7 @@ export interface Investment_Company {
 export interface CompanyData {
   Company: Investment_Company;
   Projects: Project[];
+  Invests_In: Invests_In;
 }
 
 export interface Invests_In {
@@ -79,7 +129,7 @@ export interface Is_About {
 
 export function fetchListOfProjects(): Promise<Project[]> {
   return new Promise((resolve, reject) => {
-    const db = DatabaseService.getDbConnection();
+    const db = DatabaseService.getProjectConnection();
     //const db = new sqlite3.Database('new_blog.db');
     if (!db) {
       reject(new Error("Database connection not established"));
@@ -99,7 +149,7 @@ export function fetchListOfProjects(): Promise<Project[]> {
 
 export function fetchProjectsByCompany(): Promise<any[]> {
   return new Promise((resolve, reject) => {
-    const db = DatabaseService.getDbConnection();
+    const db = DatabaseService.getProjectConnection();
     //const db = new sqlite3.Database('new_blog.db');
     if (!db) {
       reject(new Error("Database connection not established"));
@@ -124,7 +174,7 @@ export function fetchProjectsByCompany(): Promise<any[]> {
 
 export function fetchSOEs(): Promise<Investment_Company[]> {
   return new Promise((resolve, reject) => {
-    const db = DatabaseService.getDbConnection();
+    const db = DatabaseService.getProjectConnection();
     //const db = new sqlite3.Database('new_blog.db');
     if (!db) {
       reject(new Error("Database connection not established"));
@@ -145,14 +195,14 @@ export function fetchSOEs(): Promise<Investment_Company[]> {
 export function fetchProjectFromRegion(region: string): Promise<Project[]> {
   return new Promise((resolve, reject) => {
     //const db = new sqlite3.Database('new_blog.db');
-    const db = DatabaseService.getDbConnection();
+    const db = DatabaseService.getProjectConnection();
     if (!db) {
       reject(new Error("Database connection not established"));
       return;
     }
 
     const sql = `
-        SELECT * FROM Project 
+        SELECT * FROM Project_Table 
         WHERE Region = ?
       `;
     db.all(sql, [region], (err, rows) => {
@@ -170,7 +220,7 @@ export function fetchProjectByCompanyByRegion(
   region: string,
 ): Promise<Project[]> {
   return new Promise((resolve, reject) => {
-    const db = DatabaseService.getDbConnection();
+    const db = DatabaseService.getProjectConnection();
     if (!db) {
       reject(new Error("Database connection not established"));
       return;
@@ -178,7 +228,7 @@ export function fetchProjectByCompanyByRegion(
 
     const sql = `
             SELECT Project.* 
-            FROM Project 
+            FROM Project_Table 
             JOIN Investment_Company ON Project.Company_id = Investment_Company.Company_id
             WHERE Investment_Company.Name = ? AND Project.Region = ?
         `;

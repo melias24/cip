@@ -1,0 +1,15 @@
+project: bootstrap
+
+filetypes: [".ts"]
+excluded_dirs: ["node_modules"]
+
+llm:
+  model: gpt4t
+
+index:
+  type: vector
+  verbose: true
+
+query:
+  temperature: 0.1
+  max_tokens: 4096

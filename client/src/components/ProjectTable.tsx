@@ -46,8 +46,10 @@ export default function ProjectTable(props: ProjectTableProps) {
           <Thead>
             <Tr>
               <Th>Investor</Th>
+              <Th>Amount</Th>
               <Th>Year</Th>
               <Th>Sector</Th>
+              <Th>Greenfield</Th>
               <Th>Region</Th>
               <Th>Country</Th>
             </Tr>
@@ -55,11 +57,17 @@ export default function ProjectTable(props: ProjectTableProps) {
           <Tbody>
             {projects.map((project) => (
               <Tr>
-                <Td onClick={() => handleInvestorClick(project.Investor)}>
-                  <a className={"hoverable"}>{project.Investor}</a>
+                <Td
+                  onClick={() => {
+                    if (project.Investor) handleInvestorClick(project.Investor);
+                  }}
+                >
+                  {project.Investor || "---"}
                 </Td>
-                <Td>{project.year}</Td>
+                <Td>{project.Amount || "---"}</Td>
+                <Td>{project.Year}</Td>
                 <Td>{project.Sector}</Td>
+                <Td>{project.Greenfield}</Td>
                 <Td>{project.Region}</Td>
                 <Td>{project.Country}</Td>
               </Tr>
@@ -69,8 +77,10 @@ export default function ProjectTable(props: ProjectTableProps) {
             <Tfoot>
               <Tr>
                 <Th>Investor</Th>
+                <Th>Amount</Th>
                 <Th>Year</Th>
                 <Th>Sector</Th>
+                <Th>Greenfield</Th>
                 <Th>Region</Th>
                 <Th>Country</Th>
               </Tr>

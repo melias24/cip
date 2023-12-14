@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import {
-  HandleCompanyDetails,
+  HandleCompanyData,
   HandleFlexibleProjects,
   HandleInvestmentList,
   HandleInvestmentsByCountry,
@@ -11,7 +11,7 @@ import {
   HandleSectorList,
   HandleTopCompaniesByInvestmentCount,
 } from "./handlers";
-import { DatabaseService } from "./database";
+import { DatabaseService, fetchListOfProjects } from "./database";
 
 const app = express();
 const port = 8080;
@@ -19,7 +19,9 @@ const port = 8080;
 app.use(cors());
 
 // Start the database connection
-DatabaseService.getDbConnection();
+DatabaseService.getProjectConnection();
+DatabaseService.getInvestsInConnection();
+DatabaseService.getCompanyConnection();
 
 app.get("/", HandleRoot);
 app.get("/investments/", HandleInvestmentList);
@@ -30,7 +32,8 @@ app.get("/companies/top_investments", HandleTopCompaniesByInvestmentCount);
 app.get("/countries", HandleListOfCountries);
 app.get("/sectors", HandleSectorList);
 app.get("/flexible_projects", HandleFlexibleProjects);
-app.get("/company/details", HandleCompanyDetails);
+app.get("/company/details", HandleCompanyData);
+// app.get("/company/details", HandleCompanyDetails);
 
 app.listen(port, () => {
   console.log("Server running ⚡️");

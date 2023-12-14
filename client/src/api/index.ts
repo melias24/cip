@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import { CompanyData, Investment_Company, Project } from "../types";
 
-export const API_PREFIX = "http://localhost:8080";
+export const API_PREFIX = "http://cosc-257--node05.cs.amherst.edu:8080";
 
 export async function FetchInvestmentList(first?: number) {
   let firstStr = "";
@@ -49,6 +49,7 @@ export async function FetchFlexibleProjects(
         },
       },
     );
+    console.log(response);
     return response;
   } catch (error) {
     // Handle the error appropriately
@@ -60,6 +61,7 @@ export async function FetchFlexibleProjects(
 export async function FetchListOfCountries() {
   let response = await axios.get(API_PREFIX + "/countries");
   const data = response.data;
+  console.log(data);
   return data;
 }
 

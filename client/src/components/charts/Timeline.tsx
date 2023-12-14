@@ -6,7 +6,7 @@ export default function TimelineChart(props: ProjectProps) {
   const { projects } = props;
   const projectCountByYear = projects.reduce(
     (acc, project) => {
-      acc[project.year] = (acc[project.year] || 0) + 1;
+      acc[project.Year] = (acc[project.Year] || 0) + 1;
       return acc;
     },
     {} as Record<number, number>,

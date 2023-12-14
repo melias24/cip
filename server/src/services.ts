@@ -1,28 +1,34 @@
+import { isDataView } from "util/types";
 import {
   Project,
   Investment_Company,
   DatabaseService,
   CompanyData,
+  Invests_In,
 } from "./database";
 
 export async function fetchListOfProjects(): Promise<Project[]> {
-  const db = DatabaseService.getDbConnection();
+  const db = DatabaseService.getProjectConnection();
   if (!db) {
     throw new Error("Database connection not established");
   }
 
-  const sql = "SELECT * FROM Project";
+  const sql = "SELECT * FROM Project_Table";
   const rows = await new Promise<Project[]>((resolve, reject) => {
     db.all(sql, [], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows as Project[]);
+      if (err) {
+        console.log(err);
+        reject(err);
+      } else {
+        resolve(rows as Project[]);
+      }
     });
   });
   return rows;
 }
 
 export async function fetchSOEs(): Promise<Investment_Company[]> {
-  const db = DatabaseService.getDbConnection();
+  const db = DatabaseService.getProjectConnection();
   if (!db) {
     throw new Error("Database connection not established");
   }
@@ -44,12 +50,12 @@ export async function doThing() {
 export async function fetchProjectFromRegion(
   region: string,
 ): Promise<Project[]> {
-  const db = DatabaseService.getDbConnection();
+  const db = DatabaseService.getProjectConnection();
   if (!db) {
     throw new Error("Database connection not established");
   }
 
-  const sql = "SELECT * FROM Project WHERE Region = ?";
+  const sql = "SELECT * FROM Project_Table WHERE Region = ?";
   const rows = await new Promise<Project[]>((resolve, reject) => {
     db.all(sql, [region], (err, rows) => {
       if (err) reject(err);
@@ -59,29 +65,39 @@ export async function fetchProjectFromRegion(
   return rows;
 }
 
-export async function fetchProjectFromCountry(
-  country: string,
-): Promise<Project[]> {
-  const db = DatabaseService.getDbConnection();
+export async function fetchProjectFromCountry(country: string): Promise<any[]> {
+  // Changed return type to any[] to include investment data
+  const db = DatabaseService.getProjectConnection();
   if (!db) {
     throw new Error("Database connection not established");
   }
 
-  const sql = "SELECT * FROM Project WHERE Country = ?";
-  const rows = await new Promise<Project[]>((resolve, reject) => {
+  const sql = "SELECT * FROM Project_Table WHERE Country = ?";
+  const projects = await new Promise<Project[]>((resolve, reject) => {
     db.all(sql, [country], (err, rows) => {
       if (err) reject(err);
       else resolve(rows as Project[]);
     });
   });
-  return rows;
+
+  let results = [];
+  for (let i = 0; i < projects.length; i++) {
+    let invests = await fetchInvestsInByProjectId(projects[i].Project_id);
+    if (invests.length > 0) {
+      let project = projects[i] as any; // Cast to any to allow adding new properties
+      project.Amount = invests[0].Amount; // Add the investment data to the project object
+      project.Investor = invests[0].Investor; // Add the investment data to the project object
+      results.push(project);
+    }
+  }
+  return results;
 }
 
 export async function fetchProjectByCompanyByRegion(
   companyName: string,
   region: string,
 ): Promise<Project[]> {
-  const db = DatabaseService.getDbConnection();
+  const db = DatabaseService.getProjectConnection();
   if (!db) {
     throw new Error("Database connection not established");
   }
@@ -107,7 +123,7 @@ export async function fetchProjectByCompanyByRegion(
 export async function fetchProjectsBySector(
   sector: string,
 ): Promise<Project[]> {
-  const db = DatabaseService.getDbConnection();
+  const db = DatabaseService.getProjectConnection();
   if (!db) {
     throw new Error("Database connection not established");
   }
@@ -125,7 +141,7 @@ export async function fetchProjectsBySector(
 export async function fetchTopCompaniesByInvestmentCount(): Promise<
   Investment_Company[]
 > {
-  const db = DatabaseService.getDbConnection();
+  const db = DatabaseService.getProjectConnection();
   if (!db) {
     throw new Error("Database connection not established");
   }
@@ -152,12 +168,12 @@ export async function fetchFlexibleProjects(options?: {
   sortBy?: { column: string; order: "ASC" | "DESC" };
   limit?: number;
 }): Promise<Project[]> {
-  const db = DatabaseService.getDbConnection();
+  const db = DatabaseService.getProjectConnection();
   if (!db) {
     throw new Error("Database connection not established");
   }
 
-  let sql = "SELECT * FROM Project";
+  let sql = "SELECT * FROM Project_Table";
   const params: any[] = [];
 
   // Apply filters if any
@@ -194,12 +210,12 @@ export async function fetchFlexibleProjects(options?: {
 }
 
 export async function fetchListOfCountries(): Promise<string[]> {
-  const db = DatabaseService.getDbConnection();
+  const db = DatabaseService.getProjectConnection();
   if (!db) {
     throw new Error("Database connection not established");
   }
 
-  const sql = "SELECT DISTINCT Country FROM Project";
+  const sql = "SELECT DISTINCT Country FROM Project_Table";
   const countries = await new Promise<string[]>((resolve, reject) => {
     db.all(sql, [], (err, rows) => {
       if (err) reject(err);
@@ -213,12 +229,12 @@ export async function fetchListOfCountries(): Promise<string[]> {
 }
 
 export async function fetchListOfSectors(): Promise<string[]> {
-  const db = DatabaseService.getDbConnection();
+  const db = DatabaseService.getProjectConnection();
   if (!db) {
     throw new Error("Database connection not established");
   }
 
-  const sql = "SELECT DISTINCT Sector FROM Project";
+  const sql = "SELECT DISTINCT Sector FROM Project_Table";
   const sectors = await new Promise<string[]>((resolve, reject) => {
     db.all(sql, [], (err, rows) => {
       if (err) reject(err);
@@ -231,66 +247,73 @@ export async function fetchListOfSectors(): Promise<string[]> {
   return sectors;
 }
 
-// export async function fetchCompanyDetails(
-//   companyName: string,
-// ): Promise<Investment_Company | null> {
-//   const db = DatabaseService.getDbConnection();
-//   if (!db) {
-//     throw new Error("Database connection not established");
-//   }
-//
-//   const sql = "SELECT * FROM Investment_Company WHERE Investor = ?";
-//   const company = await new Promise<Investment_Company | null>(
-//     (resolve, reject) => {
-//       db.get(sql, [companyName], (err, row) => {
-//         if (err) reject(err);
-//         else resolve(row as Investment_Company | null);
-//       });
-//     },
-//   );
-//   return company;
-// }
-
-export async function fetchCompanyDetails(
-  companyName: string,
-): Promise<CompanyData> {
-  const db = DatabaseService.getDbConnection();
+export async function fetchInvestsInByProjectId(
+  projectId: string,
+): Promise<Invests_In[]> {
+  const db = DatabaseService.getInvestsInConnection();
   if (!db) {
     throw new Error("Database connection not established");
   }
 
-  const companySql = "SELECT * FROM Investment_Company WHERE Investor = ?";
-  const projectsSql = `
-    SELECT Project.*
-    FROM Project
-    JOIN Investment_Company ON Project.Company_id = Investment_Company.Company_id
-    WHERE Investment_Company.Investor = ?
-  `;
+  const sql = "SELECT * FROM Invests_in WHERE Project_id = ?";
+  const investsInData = await new Promise<Invests_In[]>((resolve, reject) => {
+    db.all(sql, [projectId], (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows as Invests_In[]);
+      }
+    });
+  });
+  return investsInData;
+}
 
-  const companyPromise = new Promise<Investment_Company | null>(
+export async function fetchCompanyData(
+  investorName: string,
+): Promise<CompanyData | null> {
+  const db = DatabaseService.getCompanyConnection();
+  if (!db) {
+    throw new Error("Database connection not established");
+  }
+
+  const sqlCompany = "SELECT * FROM Investment_Company WHERE Investor = ?";
+  const company = await new Promise<Investment_Company | null>(
     (resolve, reject) => {
-      db.get(companySql, [companyName], (err, row) => {
+      db.get(sqlCompany, [investorName], (err, row) => {
         if (err) reject(err);
         else resolve(row as Investment_Company | null);
       });
     },
   );
 
-  const projectsPromise = new Promise<Project[]>((resolve, reject) => {
-    db.all(projectsSql, [companyName], (err, rows) => {
+  if (!company) {
+    return null;
+  }
+
+  const sqlProjects = `
+  SELECT Project.*
+  FROM ProjectDB.Project_Table AS Project
+  JOIN InvestsDB.Invests_In ON Project.Project_id = InvestsDB.Invests_In.Project_id
+  WHERE InvestsDB.Invests_In.Investor = ?
+`;
+  const projects = await new Promise<Project[]>((resolve, reject) => {
+    db.all(sqlProjects, [investorName], (err, rows) => {
       if (err) reject(err);
       else resolve(rows as Project[]);
     });
   });
 
-  try {
-    const company = await companyPromise;
-    const projects = await projectsPromise;
-    return {
-      Company: company!,
-      Projects: projects,
-    };
-  } catch (error) {
-    throw error;
-  }
+  const sqlInvestsIn = "SELECT * FROM Invests_In WHERE Investor = ?";
+  const investsInData = await new Promise<Invests_In[]>((resolve, reject) => {
+    db.all(sqlInvestsIn, [investorName], (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows as Invests_In[]);
+    });
+  });
+
+  return {
+    Company: company,
+    Projects: projects,
+    Invests_In: investsInData[0], // Assuming we want the first investment data
+  };
 }
