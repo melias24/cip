@@ -1,0 +1,132 @@
+---
+title: "DBdatacode"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dbplyr)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+investment_tracker_data <- 
+  read.csv("ChineseInvestmentTracker.csv", skip = 4, na.strings = c("", "NULL"))
+
+head(investment_tracker_data)
+
+tracker_df <- data.frame(investment_tracker_data)
+
+head(tracker_df)
+```
+
+```{r}
+library("uuid")
+
+set.seed(123)
+
+Investment_tracker_df <- tracker_df %>%
+  select(Investor, Year, Month, Quantity.in.Millions,
+         Sector, Country, Region, Greenfield, SOE) %>%
+  rename(Amount.Millions = Quantity.in.Millions) %>%
+  mutate(Greenfield = ifelse(Greenfield == "G", "Greenfield", Greenfield)) %>%
+  mutate(SOE = ifelse(SOE == "Y", "Yes", SOE)) %>%
+  mutate(Source = "CIT")
+
+Investment_tracker_df$SOE <- 
+  ifelse(is.na(Investment_tracker_df$SOE), "No", Investment_tracker_df$SOE)
+
+
+Investment_tracker_df$Greenfield <- 
+  ifelse(is.na(Investment_tracker_df$Greenfield),
+         "Not Greenfield", Investment_tracker_df$Greenfield)
+
+Investment_tracker_df
+```
+
+
+
+```{r}
+CGP_data <- read.csv("CGP.csv", na.strings = c("", "NULL"))
+
+
+CGP_data <- CGP_data %>%
+  mutate(Month = "NULL") %>%
+  mutate(Amount.Millions = "NULL") %>%
+  mutate(Sector = "Energy")
+  
+
+
+CGP_df <- CGP_data %>%
+  select(Investing.Company, Month, Year.of.Commission, Amount.Millions, Sector,
+        Country, Region, Deal.type, SOE) %>%
+  rename(Investor = Investing.Company, Year = Year.of.Commission, Greenfield = Deal.type) %>%
+  mutate(SOE = ifelse(SOE == "Y", "Yes", SOE))  %>%
+  mutate(Source = "CGP")
+
+CGP_df$SOE <- 
+  ifelse(is.na(CGP_df$SOE), "No", CGP_df$SOE)
+
+CGP_df <- data.frame(CGP_df)
+
+CGP_df
+```
+
+
+
+```{r}
+AID_data <- read.csv("AID.csv", na.strings = c("", "NULL"))
+
+head(AID_data)
+```
+
+```{r}
+AID_df<- as.data.frame(AID_data)
+
+AID_df <- AID_df %>%
+  filter(Investment.Project.Loan == "Yes" | M.A == "Yes") %>%
+  mutate(Source = "AID") %>%
+  mutate(Month = "Null")
+
+AID_df
+```
+
+```{r}
+AID_df <- AID_df %>%
+  rename(Investor = Funding.Agencies, Year = Commitment.Year,
+         Amount.Millions = Amount..Constant.USD.2021., Country = Recipient,
+         Region = Recipient.Region, Greenfield = M.A)
+```
+
+```{r}
+AID_df <- AID_df %>%
+  select(Investor, Month, Year, Amount.Millions, Sector, Country, Region, Greenfield, SOE,
+         Source)
+
+```
+
+
+
+
+
+
+```{r}
+merged_df <- rbind(CGP_df, Investment_tracker_df, AID_df)
+
+#merged_df <- rbind(merged_df, AID_df)
+
+
+merged_df <- merged_df %>%
+  mutate(Project_id = UUIDgenerate(n = n()))
+
+merged_df <- merged_df[1:(nrow(merged_df) - 1), ]
+
+write.csv(merged_df, file = "merged_data.csv")
+```
+
+

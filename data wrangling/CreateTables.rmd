@@ -1,0 +1,59 @@
+---
+title: "split_dataset.rmd"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+merged_df <- read.csv("merged_data.csv")
+
+Project_Table <- merged_df %>% select(-X, -Investor, -Amount.Millions, -SOE)
+
+write.csv(Project_Table, file = "Project_Table.csv")
+```
+
+
+```{r}
+soe_list <- read.csv("companies.csv")
+
+
+Investment_Company_Table <- select(soe_list, Investor, SOE)
+
+Investment_Company_Table
+
+write.csv(Investment_Company_Table, file = "Investment_Company_Table.csv")
+```
+
+
+```{r}
+Invests_in_Table <- merged_df %>%
+  select(Project_id, Investor, Amount.Millions)
+
+write.csv(Invests_in_Table, file = "Invests_in_Table.csv")
+```
+
+```{r}
+
+library(DBI)
+library(RSQLite)
+
+db_file <- "Project_Table.db"
+
+con <- dbConnect(RSQLite::SQLite(), db_file)
+
+# Write the data frame to the SQLite database
+dbWriteTable(con, "Project_Table", Project_Table, overwrite = TRUE)
+
+# Disconnect from the database
+dbDisconnect(con)
+
+# Export the data from the SQLite database to an SQL file
+system(paste("sqlite3", db_file, ".dump > Project_Table.sql"))
+```
+
+
