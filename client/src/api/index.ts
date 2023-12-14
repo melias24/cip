@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import { CompanyData, Investment_Company, Project } from "../types";
 
-export const API_PREFIX = "http://cosc-257--node05.cs.amherst.edu:5050";
+export const API_PREFIX = "http://cosc-257-node05.cs.amherst.edu:5050";
 
 export async function FetchInvestmentList(first?: number) {
   let firstStr = "";
