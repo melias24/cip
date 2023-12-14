@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS Project (
     Country TEXT, 
     Region TEXT, 
     Greenfield TEXT, 
-    Project_id TEXT
+    Source TEXT,
+    Project_id TEXT,
     PRIMARY KEY(Project_id)
 );
 
