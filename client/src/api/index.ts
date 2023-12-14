@@ -77,7 +77,7 @@ export async function FetchListOfSectors() {
 
 export async function FetchCompanyInfo(companyName: string) {
   try {
-    const response = await axios.get("http://localhost:8080/company/details", {
+    const response = await axios.get(API_PREFIX + "/company/details", {
       params: {
         name: companyName,
       },

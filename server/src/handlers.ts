@@ -147,12 +147,14 @@ export async function HandleSectorList(req: Request, res: Response) {
 // }
 
 export async function HandleCompanyData(req: Request, res: Response) {
+  console.log("Here");
   const investor = req.query.name as string;
   if (!investor) {
     return res.status(400).send("Investor parameter is required");
   }
 
   try {
+    console.log("here");
     const companyData = await fetchCompanyData(investor);
     if (companyData) {
       return res.json(companyData);
