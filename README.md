@@ -15,6 +15,10 @@ We aim to allow users to look at different investment companies, projects, and e
 - Kedar Nagaraj
 - Neal Malani
 
-## Tentative Final ER Schema
+## Final ER Schema
 
-![ER Diagram](/docs/er_diagram.png)
+![er](/docs/er.png)
+
+## Final Relational Schema
+
+![relational](/docs/relational.png)
