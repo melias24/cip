@@ -38,24 +38,42 @@ export class DatabaseService {
 }
 
 export interface Project {
-  Project_id: number;
-  Country: string;
-  Year_of_Commission: Date;
-  Purpose: string;
-  Geolocation: string;
+  Month: string;
+  Year: Date;
   Sector: string;
+  Country: string;
   Region: string;
+  Greenfield: string;
+  Project_id: string;
 }
 
 export interface Investment_Company {
-  Company_id: number;
   Investor: string;
-  SOE: number;
+  SOE: string;
 }
 
 export interface CompanyData {
   Company: Investment_Company;
   Projects: Project[];
+}
+
+export interface Invests_In {
+  Project_id: string;
+  Investor: string;
+  Amount: string;
+}
+
+export interface Survey {
+  Survey_id: string;
+  List_of_Answers: string[];
+  List_of_Questions: string[];
+  Answer_Date: Date;
+}
+
+export interface Is_About {
+  Project_id: string;
+  Survey_id: string;
+  Proximity: number;
 }
 
 export function fetchListOfProjects(): Promise<Project[]> {
@@ -112,7 +130,7 @@ export function fetchSOEs(): Promise<Investment_Company[]> {
       return;
     }
 
-    const sql = "SELECT * FROM Investment_Company WHERE SOE = TRUE";
+    const sql = "SELECT * FROM Investment_Company WHERE SOE = 'Yes'";
     db.all(sql, [], (err, rows) => {
       if (err) {
         reject(err);
