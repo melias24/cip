@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 merged_df <- read.csv("merged_data.csv")
 
-Project_Table <- merged_df %>% select(-X, -Investor, -Amount.Millions, -SOE)
+Project_Table <- merged_df %>% select(-X, -Investor, -Amount, -SOE)
 
 write.csv(Project_Table, file = "Project_Table.csv")
 ```
@@ -21,10 +21,20 @@ write.csv(Project_Table, file = "Project_Table.csv")
 ```{r}
 soe_list <- read.csv("companies.csv")
 
-
 Investment_Company_Table <- select(soe_list, Investor, SOE)
 
-Investment_Company_Table
+AID_data_add <- merged_df %>%
+  filter(Source == "AID") %>%
+  select(Investor, SOE) %>%
+  distinct(Investor, .keep_all = TRUE)
+
+
+head(AID_data_add)
+head(Investment_Company_Table)
+
+Investment_Company_Table <- rbind(Investment_Company_Table, AID_data_add)
+
+
 
 write.csv(Investment_Company_Table, file = "Investment_Company_Table.csv")
 ```
@@ -32,7 +42,7 @@ write.csv(Investment_Company_Table, file = "Investment_Company_Table.csv")
 
 ```{r}
 Invests_in_Table <- merged_df %>%
-  select(Project_id, Investor, Amount.Millions)
+  select(Project_id, Investor, Amount)
 
 write.csv(Invests_in_Table, file = "Invests_in_Table.csv")
 ```
@@ -42,18 +52,18 @@ write.csv(Invests_in_Table, file = "Invests_in_Table.csv")
 library(DBI)
 library(RSQLite)
 
-db_file <- "Project_Table.db"
+db_file <- "Invests_in.db"
 
 con <- dbConnect(RSQLite::SQLite(), db_file)
 
 # Write the data frame to the SQLite database
-dbWriteTable(con, "Project_Table", Project_Table, overwrite = TRUE)
+dbWriteTable(con, "Invests_in", Invests_in_Table, overwrite = TRUE)
 
 # Disconnect from the database
 dbDisconnect(con)
 
 # Export the data from the SQLite database to an SQL file
-system(paste("sqlite3", db_file, ".dump > Project_Table.sql"))
+system(paste("sqlite3", db_file, ".dump > Invests_in.sql"))
 ```
 
 
