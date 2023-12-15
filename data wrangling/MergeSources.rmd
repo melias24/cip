@@ -33,7 +33,7 @@ set.seed(123)
 Investment_tracker_df <- tracker_df %>%
   select(Investor, Year, Month, Quantity.in.Millions,
          Sector, Country, Region, Greenfield, SOE) %>%
-  rename(Amount.Millions = Quantity.in.Millions) %>%
+  rename(Amount = Quantity.in.Millions) %>%
   mutate(Greenfield = ifelse(Greenfield == "G", "Greenfield", Greenfield)) %>%
   mutate(SOE = ifelse(SOE == "Y", "Yes", SOE)) %>%
   mutate(Source = "CIT")
@@ -57,13 +57,13 @@ CGP_data <- read.csv("CGP.csv", na.strings = c("", "NULL"))
 
 CGP_data <- CGP_data %>%
   mutate(Month = "NULL") %>%
-  mutate(Amount.Millions = "NULL") %>%
+  mutate(Amount = "NULL") %>%
   mutate(Sector = "Energy")
   
 
 
 CGP_df <- CGP_data %>%
-  select(Investing.Company, Month, Year.of.Commission, Amount.Millions, Sector,
+  select(Investing.Company, Month, Year.of.Commission, Amount, Sector,
         Country, Region, Deal.type, SOE) %>%
   rename(Investor = Investing.Company, Year = Year.of.Commission, Greenfield = Deal.type) %>%
   mutate(SOE = ifelse(SOE == "Y", "Yes", SOE))  %>%
@@ -99,13 +99,13 @@ AID_df
 ```{r}
 AID_df <- AID_df %>%
   rename(Investor = Funding.Agencies, Year = Commitment.Year,
-         Amount.Millions = Amount..Constant.USD.2021., Country = Recipient,
+         Amount = Amount..Constant.USD.2021., Country = Recipient,
          Region = Recipient.Region, Greenfield = M.A)
 ```
 
 ```{r}
 AID_df <- AID_df %>%
-  select(Investor, Month, Year, Amount.Millions, Sector, Country, Region, Greenfield, SOE,
+  select(Investor, Month, Year, Amount, Sector, Country, Region, Greenfield, SOE,
          Source)
 
 ```
