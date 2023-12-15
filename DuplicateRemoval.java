@@ -10,8 +10,10 @@ public class DuplicateRemoval {
 
         String inputFile = "merged_data.csv";
         String outputFile = "output.csv";
-        String duplicatesFile = "duplicate.csv";
+        String duplicatesFile = "duplicate.csv"; //A file to confirm flagged duplicates 
 
+        //I split the merged file using a cutoff file to determine which data source an entry came from since 
+        //we only want to compare data entries from different sources
         int cutoffLine = 1423; // Set the cutoff line number
         List<String[]> firstDataSource = new ArrayList<>();
         List<String[]> secondDataSource = new ArrayList<>();
@@ -24,7 +26,7 @@ public class DuplicateRemoval {
             int lineNumber = 0;
             while ((line = reader.readLine()) != null) {
                 lineNumber++;
-                String[] columns = line.split(","); // Assuming comma-separated values
+                String[] columns = line.split(","); 
 
                 if (lineNumber <= cutoffLine) {
                     firstDataSource.add(columns);
@@ -47,7 +49,7 @@ public class DuplicateRemoval {
                 }
             }
 
-            // Optionally, write remaining entries from the first data source to the output file
+            // write remaining entries from the first data source to the output file
             for (String[] entry : firstDataSource) {
                 writer.write(String.join(",", entry));
                 writer.newLine();
@@ -60,11 +62,12 @@ public class DuplicateRemoval {
 
     }
 
-    private static int findDuplicateIndex(List<String[]> dataSource, String name, String secondAttribute, String thirdAttribute) {
+    //If the name of the investment company,the year, and country are the same, we mark it as a duplicate entry
+    private static int findDuplicateIndex(List<String[]> dataSource, String name, String year, String country) {
         for (int i = 0; i < dataSource.size(); i++) {
             String[] entry = dataSource.get(i);
             // Use findDuplicateName for comparing names
-            if (findDuplicateName(entry[1], name) && entry[3].equals(secondAttribute) && entry[6].equals(thirdAttribute)) {
+            if (findDuplicateName(entry[1], name) && entry[3].equals(year) && entry[6].equals(country)) {
                 return i; // Return the index of the duplicate entry
             }
         }
